@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neurx | Dashboard de Seguimiento Automatizado de Cotizaciones e IA</title>
+
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            neurx: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb', // Blue required
+              700: '#1d4ed8',
+              800: '#1e40af', // Deep blue required
+              900: '#1e3a8a',
+              950: '#0f172a',
+            }
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02)',
+            'card': '0 10px 25px -5px rgba(30, 64, 175, 0.08), 0 8px 10px -6px rgba(30, 64, 175, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar and animations */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .pulse-glow {
+      animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-border {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.6;
+        transform: scale(1.15);
+      }
+    }
+
+    /* Subtle transition for view switching */
+    .view-container {
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Toast animation */
+    .toast-enter {
+      animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes toastSlide {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
+</head>
+
+<body
+  class="h-full flex overflow-hidden font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- ======================================================== -->
+  <!-- 1. ESTRUCTURA Y NAVEGACIÓN (Sidebar Layout)              -->
+  <!-- ======================================================== -->
+  <aside id="sidebar"
+    class="fixed inset-y-0 left-0 z-40 w-64 md:w-72 bg-gradient-to-b from-[#1E40AF] to-[#1E3A8A] text-white flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl">
+    <!-- Brand / Logo -->
+    <div class="h-20 flex items-center justify-between px-6 border-b border-blue-700/60 bg-[#1E40AF]">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
+          <i class="fa-solid fa-brain text-xl text-blue-200"></i>
+        </div>
+        <div>
+          <span class="font-display font-extrabold text-2xl tracking-wider text-white">NEURX</span>
+          <span class="block text-[10px] uppercase font-bold tracking-widest text-blue-200/80 -mt-1">AI Sales
+            Follow-Up</span>
+        </div>
+      </div>
+      <!-- Mobile Close Button -->
+      <button onclick="toggleMobileSidebar()"
+        class="md:hidden text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Navigation Menu (3 Buttons) -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <div class="px-3 pb-2 text-[11px] font-bold tracking-wider text-blue-200/60 uppercase">
+        Navegación Principal
+      </div>
+
+      <!-- Nav Item 1: Dashboard -->
+      <button id="nav-dashboard" onclick="switchView('dashboard')"
+        class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-white/15 text-white shadow-sm border border-white/10">
+        <i class="fa-solid fa-table-columns text-base w-5 text-blue-200"></i>
+        <span>Dashboard</span>
+        <span class="ml-auto bg-blue-500/40 text-blue-100 text-xs px-2 py-0.5 rounded-full font-semibold">Live</span>
+      </button>
+
+      <!-- Nav Item 2: Analítica General -->
+      <button id="nav-analytics" onclick="switchView('analytics')"
+        class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-blue-100/80 hover:text-white hover:bg-white/10">
+        <i class="fa-solid fa-chart-column text-base w-5 text-blue-300"></i>
+        <span>Analítica General</span>
+      </button>
+
+      <!-- Nav Item 3: Configuración de IA -->
+      <button id="nav-ai-config" onclick="switchView('ai-config')"
+        class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-blue-100/80 hover:text-white hover:bg-white/10">
+        <i class="fa-solid fa-sliders text-base w-5 text-blue-300"></i>
+        <span>Configuración de IA</span>
+      </button>
+    </nav>
+
+    <!-- Sidebar Footer / AI System Status -->
+    <div class="p-4 m-4 rounded-2xl bg-blue-900/60 border border-blue-600/40 backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-blue-200 flex items-center gap-1.5">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          Neurx Core v2.4
+        </span>
+        <span
+          class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Activo</span>
+      </div>
+      <p class="text-[11px] text-blue-100/70 leading-relaxed">
+        Algoritmo predictivo monitoreando 18 cotizaciones en tiempo real.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div id="mobile-overlay" onclick="toggleMobileSidebar()"
+    class="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-xs transition-opacity hidden md:hidden"></div>
+
+  <!-- Main Content Area Wrapper -->
+  <div class="flex-1 flex flex-col min-w-0 md:pl-72 h-full overflow-hidden bg-slate-50">
+
+    <!-- ======================================================== -->
+    <!-- 2. ENCABEZADO (Header Superior)                         -->
+    <!-- ======================================================== -->
+    <header
+      class="h-20 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 z-20 shrink-0 shadow-xs">
+      <div class="flex items-center gap-4">
+        <!-- Mobile Toggle Button -->
+        <button onclick="toggleMobileSidebar()"
+          class="md:hidden text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+
+        <!-- Current View Title & Dynamic Breadcrumb -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
+            <span>Neurx Cloud</span>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <span id="breadcrumb-current" class="text-blue-600 font-semibold">Dashboard Principal</span>
+          </div>
+          <h1 id="page-heading" class="font-display font-bold text-lg sm:text-xl text-slate-800 tracking-tight">
+            Seguimiento de Cotizaciones
+          </h1>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3 sm:gap-6">
+
+        <!-- Fecha dinámica actual -->
+        <div
+          class="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200 text-xs font-medium text-slate-600">
+          <i class="fa-regular fa-calendar-days text-blue-600"></i>
+          <span id="header-dynamic-date">Cargando fecha...</span>
+        </div>
+
+        <!-- Botón interactivo "Sincronizar CRM" -->
+        <button id="btn-sync-crm" onclick="syncCRM()"
+          class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100/80 text-blue-700 font-semibold text-xs sm:text-sm rounded-xl border border-blue-200 transition-all duration-200 shadow-xs active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+          <i id="sync-icon" class="fa-solid fa-arrows-rotate text-blue-600"></i>
+          <span id="sync-text">Sincronizar CRM</span>
+        </button>
+
+        <!-- Separator -->
+        <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+
+        <!-- Perfil con avatar: "Ficergib Solís" con indicador visual en verde "En línea" -->
+        <div class="flex items-center gap-3 pl-1">
+          <div class="relative shrink-0">
+            <!-- User Avatar Image -->
+            <img class="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100 shadow-xs"
+              src="https://media.licdn.com/dms/image/v2/D4E03AQFykEDyZyijlQ/profile-displayphoto-scale_200_200/B4EZ4C5HrcHsAY-/0/1778164994185?e=2147483647&v=beta&t=6Q5uJw1yvtURvZRENTwI9-VkQRXVYUkADpn5tMxi2nI"
+              alt="Ficergib Solís">
+            <!-- Indicador visual verde "En línea" -->
+            <span
+              class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-emerald-400"
+              title="En línea"></span>
+          </div>
+          <div class="hidden sm:block text-left leading-tight">
+            <span class="block font-semibold text-sm text-slate-800">Ficergib Solís</span>
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              En línea
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ======================================================== -->
+    <!-- MAIN SCROLLABLE CONTENT BODY                             -->
+    <!-- ======================================================== -->
+    <main class="flex-1 overflow-y-auto px-4 sm:px-8 py-6 md:py-8 space-y-6">
+
+      <!-- ====================================================== -->
+      <!-- 3. VISTA 1: DASHBOARD PRINCIPAL                        -->
+      <!-- ====================================================== -->
+      <section id="view-dashboard" class="view-container space-y-8">
+
+        <!-- Welcome Banner / Context -->
+        <div
+          class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 rounded-2xl p-6 text-white shadow-card relative overflow-hidden">
+          <div class="relative z-10">
+            <span
+              class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 bg-white/10 rounded-full text-blue-100 mb-2 border border-white/15">
+              <i class="fa-solid fa-sparkles text-amber-300"></i> Automatización Inteligente Activa
+            </span>
+            <h2 class="text-xl sm:text-2xl font-display font-bold">¡Hola de nuevo, Ficergib!</h2>
+            <p class="text-blue-100 text-sm max-w-xl mt-1 leading-relaxed">
+              El motor de IA ha detectado <strong
+                class="text-white underline decoration-amber-400 decoration-2 font-semibold">4 clientes con alta
+                probabilidad de cierre</strong> hoy. Revisa las recomendaciones a continuación.
+            </p>
+          </div>
+          <div class="relative z-10 flex items-center gap-3">
+            <button onclick="openNewQuoteModal()"
+              class="px-4 py-2.5 bg-white text-blue-800 hover:bg-blue-50 font-bold text-sm rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center gap-2">
+              <i class="fa-solid fa-plus text-blue-600"></i>
+              Nueva Cotización
+            </button>
+          </div>
+          <!-- Decorative Background Wave/Circle -->
+          <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none">
+          </div>
+        </div>
+
+        <!-- 4 Tarjetas de Métricas (KPI Cards) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+
+          <!-- KPI 1: Cotizaciones Pendientes -->
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cotizaciones Pendientes</span>
+              <div
+                class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span id="kpi-pending-count" class="text-3xl font-display font-extrabold text-slate-900">18</span>
+              <!-- badge verde: "+3 nuevas hoy" -->
+              <span
+                class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> +3 nuevas hoy
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+              <i class="fa-regular fa-clock text-slate-400"></i> En espera de respuesta del cliente
+            </p>
+          </div>
+
+          <!-- KPI 2: Seguimientos Programados -->
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Seguimientos
+                Programados</span>
+              <div
+                class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-calendar-check text-base"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span class="text-3xl font-display font-extrabold text-slate-900">12</span>
+              <!-- subtexto: "Próximo en 45 min" -->
+              <span
+                class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span> Próximo en 45 min
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-robot text-indigo-500"></i> 9 por Email &bull; 3 por WhatsApp
+            </p>
+          </div>
+
+          <!-- KPI 3: Alertas de Alta Intención -->
+          <div
+            class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-soft hover:shadow-md transition-shadow bg-gradient-to-b from-white to-amber-50/20">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-amber-800 uppercase tracking-wider">Alertas de Alta
+                Intención</span>
+              <div
+                class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                <i class="fa-solid fa-fire-flame-curved text-base"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span class="text-3xl font-display font-extrabold text-slate-900">4</span>
+              <!-- badge destacado: "Acción recomendada" -->
+              <span
+                class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs">
+                <i class="fa-solid fa-bolt text-[10px]"></i> Acción recomendada
+              </span>
+            </div>
+            <p class="text-xs text-amber-700/80 mt-2 font-medium">
+              Clientes que abrieron el PDF >3 veces hoy
+            </p>
+          </div>
+
+          <!-- KPI 4: Tasa de Recuperación -->
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tasa de Recuperación</span>
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <i class="fa-solid fa-arrow-trend-up text-base"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span class="text-3xl font-display font-extrabold text-slate-900">34%</span>
+              <!-- badge verde: "+2.1% vs semana" -->
+              <span
+                class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <i class="fa-solid fa-caret-up text-sm"></i> +2.1% vs semana
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-trophy text-emerald-600"></i> 14 cotizaciones reactivadas
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Tabla de Cotizaciones Activas -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-soft overflow-hidden">
+
+          <!-- Controles de la Tabla: Búsqueda, Filtrar por canal y Ordenar -->
+          <div
+            class="p-5 sm:p-6 border-b border-slate-200/70 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base sm:text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                Cotizaciones Activas en Seguimiento
+                <span id="table-count-badge"
+                  class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">6 activas</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Priorizadas dinámicamente mediante el Scoring de Intención del Modelo Neurx.
+              </p>
+            </div>
+
+            <!-- Action Controls Group -->
+            <div class="flex flex-wrap items-center gap-3">
+
+              <!-- Search box -->
+              <div class="relative min-w-[200px]">
+                <i
+                  class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input id="table-search" type="text" oninput="handleFilterAndSort()" placeholder="Buscar cliente..."
+                  class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50/50">
+              </div>
+
+              <!-- Filtro por Canal (Email / WhatsApp / Todos) -->
+              <div
+                class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-medium">
+                <button onclick="setChannelFilter('ALL')" id="filter-btn-all"
+                  class="channel-filter-btn px-2.5 py-1.5 rounded-lg bg-white shadow-xs text-blue-700 font-semibold transition-all">
+                  Todos
+                </button>
+                <button onclick="setChannelFilter('Email')" id="filter-btn-email"
+                  class="channel-filter-btn px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1">
+                  <i class="fa-regular fa-envelope text-blue-600"></i> Email
+                </button>
+                <button onclick="setChannelFilter('WhatsApp')" id="filter-btn-whatsapp"
+                  class="channel-filter-btn px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1">
+                  <i class="fa-brands fa-whatsapp text-emerald-600"></i> WhatsApp
+                </button>
+              </div>
+
+              <!-- Selector para Ordenar -->
+              <div class="flex items-center gap-2">
+                <label for="table-sort" class="text-xs font-semibold text-slate-500 hidden sm:inline">Ordenar:</label>
+                <select id="table-sort" onchange="handleFilterAndSort()"
+                  class="text-xs font-medium py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                  <option value="score-desc">Scoring IA (Mayor a Menor)</option>
+                  <option value="amount-desc">Monto (Mayor a Menor)</option>
+                  <option value="amount-asc">Monto (Menor a Mayor)</option>
+                  <option value="date-desc">Fecha de Envío (Más reciente)</option>
+                </select>
+              </div>
+
+              <!-- Botón Agregar Cotización -->
+              <button onclick="openNewQuoteModal()"
+                class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i>
+                <span>Agregar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla HTML Responsiva -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead
+                class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold text-[11px] tracking-wider">
+                <tr>
+                  <th scope="col" class="py-3.5 px-6">Cliente</th>
+                  <th scope="col" class="py-3.5 px-6">Monto</th>
+                  <th scope="col" class="py-3.5 px-6">Fecha de Envío</th>
+                  <th scope="col" class="py-3.5 px-6">Canal</th>
+                  <th scope="col" class="py-3.5 px-6">Scoring IA</th>
+                  <th scope="col" class="py-3.5 px-6">Estado</th>
+                  <th scope="col" class="py-3.5 px-6 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="quotes-table-body" class="divide-y divide-slate-100">
+                <!-- Se rellena dinámicamente con JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer Status -->
+          <div
+            class="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <div id="table-summary-text">
+              Mostrando cotizaciones en seguimiento activo
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Motor predictivo sincronizado</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- 4. VISTA 2: ANALÍTICA GENERAL                          -->
+      <!-- ====================================================== -->
+      <section id="view-analytics" class="view-container space-y-8 hidden">
+
+        <!-- Header de Analítica -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-display font-bold text-slate-900">Analítica de Recuperación y Conversión
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Rendimiento acumulado de las campañas de seguimiento automatizado durante el trimestre.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700">Este Mes</button>
+            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-800">Último
+              Trimestre</button>
+            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-800">Año
+              2026</button>
+          </div>
+        </div>
+
+        <!-- Metric Summary Chips -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-soft">
+            <div class="text-xs font-semibold text-slate-400 uppercase">Tiempo Promedio de Cierre</div>
+            <div class="text-2xl font-display font-bold text-slate-800 mt-2">3.2 Días</div>
+            <div class="text-xs text-emerald-600 mt-1 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-bolt"></i> 48% más rápido que gestión manual
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-soft">
+            <div class="text-xs font-semibold text-slate-400 uppercase">Cotizaciones Reactivadas</div>
+            <div class="text-2xl font-display font-bold text-slate-800 mt-2">142 de 418</div>
+            <div class="text-xs text-blue-600 mt-1 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-chart-line"></i> Tasa global de éxito del 33.9%
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-soft">
+            <div class="text-xs font-semibold text-slate-400 uppercase">Canal de Mayor Conversión</div>
+            <div class="text-2xl font-display font-bold text-emerald-600 mt-2 flex items-center gap-2">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </div>
+            <div class="text-xs text-slate-500 mt-1 font-medium">
+              41.8% tasa de respuesta dentro de 2h
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Gráficos interactivos simples con Chart.js -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Gráfico de barras comparativo de cotizaciones enviadas vs recuperadas -->
+          <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-soft">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-display font-bold text-slate-900 text-base">Cotizaciones Enviadas vs. Recuperadas</h3>
+                <p class="text-xs text-slate-400">Comparativa mensual de volumen recuperado por la IA de Neurx</p>
+              </div>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1.5 text-slate-600"><span
+                    class="w-3 h-3 rounded-sm bg-blue-600"></span> Enviadas</span>
+                <span class="flex items-center gap-1.5 text-slate-600"><span
+                    class="w-3 h-3 rounded-sm bg-emerald-500"></span> Recuperadas</span>
+              </div>
+            </div>
+            <div class="relative h-72 w-full">
+              <canvas id="barChartComparative"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico de dona con la distribución por canal (WhatsApp vs Email) -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-soft flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-display font-bold text-slate-900 text-base">Distribución por Canal</h3>
+                <span
+                  class="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full">Proporción</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">Canal efectivo de interacción del cliente</p>
+              <div class="relative h-56 w-full flex items-center justify-center">
+                <canvas id="doughnutChartChannels"></canvas>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-2 font-medium text-slate-700">
+                  <i class="fa-brands fa-whatsapp text-emerald-500 text-sm"></i> WhatsApp
+                </span>
+                <span class="font-bold text-slate-900">58% (242)</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-2 font-medium text-slate-700">
+                  <i class="fa-regular fa-envelope text-blue-600 text-sm"></i> Email
+                </span>
+                <span class="font-bold text-slate-900">42% (176)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Banner destacado en la parte inferior de color azul con texto grande en blanco -->
+        <div
+          class="relative overflow-hidden bg-gradient-to-r from-[#1E40AF] via-[#1D4ED8] to-[#2563EB] rounded-2xl p-8 sm:p-10 text-white shadow-card">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold tracking-wide uppercase text-blue-100">
+                <i class="fa-solid fa-trophy text-amber-300"></i> Rendimiento Financiero Excepcional
+              </div>
+              <!-- Requisito exacto: Texto grande en blanco -->
+              <h3 class="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white">
+                Monto total Recuperado este mes: <span class="text-emerald-300">$487,250</span>
+              </h3>
+              <p class="text-blue-100 text-sm sm:text-base max-w-2xl font-normal leading-relaxed">
+                Este monto representa cotizaciones que estaban estancadas por más de 72 horas y fueron reactivadas
+                gracias al algoritmo predictivo de Neurx.
+              </p>
+            </div>
+            <div class="shrink-0 flex flex-col sm:flex-row gap-3">
+              <button onclick="downloadReportSimulated()"
+                class="px-5 py-3 bg-white hover:bg-blue-50 text-blue-800 font-bold text-sm rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-file-arrow-down text-blue-600"></i>
+                Descargar Reporte Ejecutivo
+              </button>
+            </div>
+          </div>
+          <!-- Decorative Background Elements -->
+          <div class="absolute -right-16 -top-16 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute left-1/3 -bottom-16 w-60 h-60 bg-blue-300/10 rounded-full blur-2xl pointer-events-none">
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- 5. VISTA 3: CONFIGURACIÓN DE IA                        -->
+      <!-- ====================================================== -->
+      <section id="view-ai-config" class="view-container space-y-8 hidden">
+
+        <!-- Header Configuración de IA -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-display font-bold text-slate-900">Motor de Inteligencia Artificial Neurx
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Configura las secuencias automatizadas de seguimiento y personaliza las plantillas con variables
+              dinámicas.
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+              <i class="fa-solid fa-circle-check text-emerald-500"></i> Disparadores Activos
+            </span>
+          </div>
+        </div>
+
+        <!-- Sección: Editor de Secuencias de Seguimiento -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-6">
+          <div class="flex items-center justify-between pb-5 border-b border-slate-200 mb-6">
+            <div>
+              <h3 class="text-base sm:text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-diagram-project text-blue-600"></i>
+                Editor de Secuencias de Seguimiento
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Flujos de eventos basados en el comportamiento del prospecto con la cotización enviada.
+              </p>
+            </div>
+            <button onclick="openNewTriggerModal()"
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> Nuevo Disparador
+            </button>
+          </div>
+
+          <!-- Lista de Triggers configurados -->
+          <div class="space-y-4" id="triggers-list">
+
+            <!-- Trigger 1 -->
+            <div
+              class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+              data-id="trigger-1">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div
+                  class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center shrink-0">
+                  <i class="fa-regular fa-envelope-open"></i>
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-900 trigger-event">Cotización sin apertura</span>
+                    <i class="fa-solid fa-arrow-right text-[11px] text-slate-400"></i>
+                    <span
+                      class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 trigger-action">Primer
+                      email: 24h después</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    Detecta si el enlace de visualización no registra apertura en las primeras 24 horas hábiles.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+                <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                </span>
+                <button onclick="editTrigger('trigger-1', 'Cotización sin apertura', 'Primer email: 24h después')"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid fa-pen-to-square text-blue-600"></i> Editar
+                </button>
+              </div>
+            </div>
+
+            <!-- Trigger 2 -->
+            <div
+              class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+              data-id="trigger-2">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div
+                  class="w-10 h-10 rounded-xl bg-indigo-100/70 text-indigo-700 flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-computer-mouse"></i>
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-900 trigger-event">Email abierto sin clic</span>
+                    <i class="fa-solid fa-arrow-right text-[11px] text-slate-400"></i>
+                    <span
+                      class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 trigger-action">Recordatorio:
+                      48h después</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    Envía un refuerzo con un caso de éxito relevante a la industria del cliente.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+                <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                </span>
+                <button onclick="editTrigger('trigger-2', 'Email abierto sin clic', 'Recordatorio: 48h después')"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid fa-pen-to-square text-blue-600"></i> Editar
+                </button>
+              </div>
+            </div>
+
+            <!-- Trigger 3 -->
+            <div
+              class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+              data-id="trigger-3">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div
+                  class="w-10 h-10 rounded-xl bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0">
+                  <i class="fa-brands fa-whatsapp text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-900 trigger-event">Clic detectado</span>
+                    <i class="fa-solid fa-arrow-right text-[11px] text-slate-400"></i>
+                    <span
+                      class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 trigger-action">WhatsApp:
+                      72h después</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    Dispara un mensaje conversacional amigable por WhatsApp consultando si surgieron dudas.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+                <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                </span>
+                <button onclick="editTrigger('trigger-3', 'Clic detectado', 'WhatsApp: 72h después')"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid fa-pen-to-square text-blue-600"></i> Editar
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Sección: Editor de Plantillas de Mensajes -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-6">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-200 mb-6 gap-3">
+            <div>
+              <h3 class="text-base sm:text-lg font-display font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-pen-nib text-blue-600"></i>
+                Editor de Plantillas de Mensajes
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Personaliza los copys utilizados por los agentes automáticos. Puedes usar variables dinámicas.
+              </p>
+            </div>
+            <!-- Dynamic variables chips -->
+            <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span class="text-slate-400 font-medium">Variables disponibles:</span>
+              <button type="button" onclick="insertVariable('email-template', '{{nombre_cliente}}')"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono cursor-pointer transition-colors"
+                title="Haz clic para copiar/insertar">{{nombre_cliente}}</button>
+              <button type="button" onclick="insertVariable('email-template', '{{monto_cotizacion}}')"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono cursor-pointer transition-colors"
+                title="Haz clic para copiar/insertar">{{monto_cotizacion}}</button>
+              <button type="button" onclick="insertVariable('email-template', '{{enlace_cotizacion}}')"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono cursor-pointer transition-colors"
+                title="Haz clic para copiar/insertar">{{enlace_cotizacion}}</button>
+            </div>
+          </div>
+
+          <form id="templates-form" onsubmit="saveTemplates(event)" class="space-y-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+              <!-- Plantilla de Email - Recordatorio Inicial -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="email-template" class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs">
+                      <i class="fa-regular fa-envelope"></i>
+                    </span>
+                    Plantilla de Email - Recordatorio Inicial
+                  </label>
+                  <span class="text-[11px] text-slate-400">Canal: Email</span>
+                </div>
+                <div class="relative">
+                  <textarea id="email-template" rows="9"
+                    class="w-full text-xs font-normal text-slate-800 p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50/50 leading-relaxed font-sans"
+                    placeholder="Escribe el cuerpo del correo..."></textarea>
+                </div>
+                <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                  <span>Sugerencia: Mantén el tono consultivo y directo.</span>
+                  <span id="email-char-count">0 caracteres</span>
+                </div>
+              </div>
+
+              <!-- Plantilla de WhatsApp - Seguimiento -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="whatsapp-template" class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span
+                      class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </span>
+                    Plantilla de WhatsApp - Seguimiento
+                  </label>
+                  <span class="text-[11px] text-slate-400">Canal: WhatsApp</span>
+                </div>
+                <div class="relative">
+                  <textarea id="whatsapp-template" rows="9"
+                    class="w-full text-xs font-normal text-slate-800 p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50/50 leading-relaxed font-sans"
+                    placeholder="Escribe el mensaje de WhatsApp..."></textarea>
+                </div>
+                <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                  <span>Sugerencia: Usa emojis y formatos con *negrita*.</span>
+                  <span id="whatsapp-char-count">0 caracteres</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Botones de Acción de Plantillas -->
+            <div
+              class="pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <button type="button" onclick="restoreDefaultTemplates()"
+                class="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                <i class="fa-solid fa-rotate-left mr-1"></i> Restablecer a plantillas por defecto
+              </button>
+
+              <div class="flex items-center gap-3">
+                <button type="submit"
+                  class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-2">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: AGREGAR NUEVA COTIZACIÓN                          -->
+  <!-- ======================================================== -->
+  <div id="modal-new-quote"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fadeIn">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i class="fa-solid fa-file-circle-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-slate-900 text-base">Nueva Cotización</h3>
+            <p class="text-xs text-slate-500">Añadir al flujo de seguimiento automatizado</p>
+          </div>
+        </div>
+        <button onclick="closeNewQuoteModal()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="form-new-quote" onsubmit="handleCreateQuote(event)" class="space-y-4 pt-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nombre del Cliente / Empresa</label>
+          <input type="text" id="quote-client" required placeholder="Ej. Soluciones Logísticas Atlas"
+            class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto (USD $)</label>
+            <input type="number" id="quote-amount" required min="100" step="50" placeholder="Ej. 15000"
+              class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Canal de Envío</label>
+            <select id="quote-channel"
+              class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+              <option value="Email">Email</option>
+              <option value="WhatsApp">WhatsApp</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Scoring IA Estimado (1.0 - 10.0)</label>
+            <input type="number" id="quote-score" required min="1.0" max="10.0" step="0.1" value="8.0"
+              class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Estado</label>
+            <select id="quote-status"
+              class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+              <option value="Seguimiento">Seguimiento</option>
+              <option value="Alta Intención">Alta Intención</option>
+              <option value="Negociación">Negociación</option>
+              <option value="En Riesgo">En Riesgo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeNewQuoteModal()"
+            class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition-colors">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-xs transition-colors">
+            Guardar y Monitorear
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EDITAR DISPARADOR DE IA                           -->
+  <!-- ======================================================== -->
+  <div id="modal-edit-trigger"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fadeIn">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="font-display font-bold text-slate-900 text-base flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-blue-600"></i>
+          Editar Disparador de Seguimiento
+        </h3>
+        <button onclick="closeEditTriggerModal()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="form-edit-trigger" onsubmit="handleSaveTrigger(event)" class="space-y-4 pt-4 text-xs">
+        <input type="hidden" id="edit-trigger-id">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Evento Disparador</label>
+          <input type="text" id="edit-trigger-event" required
+            class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Acción y Tiempo Programado</label>
+          <input type="text" id="edit-trigger-action" required
+            class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600">
+        </div>
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeEditTriggerModal()"
+            class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">
+            Actualizar Regla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: INTERVENCIÓN DIRECTA (Acción del botón de la tabla) -->
+  <!-- ======================================================== -->
+  <div id="modal-intervene"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fadeIn">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span
+            class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-headset"></i>
+          </span>
+          <h3 class="font-display font-bold text-slate-900 text-base">Intervención Humana</h3>
+        </div>
+        <button onclick="closeInterveneModal()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="py-4 text-xs space-y-3">
+        <p class="text-slate-600 leading-relaxed">
+          Vas a pausar la secuencia automática de IA para <strong id="intervene-client-name"
+            class="text-slate-900">TechCorp Solutions</strong> para que <strong class="text-blue-700">Ficergib
+            Solís</strong> tome contacto personal inmediato.
+        </p>
+        <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
+          <span class="font-semibold text-blue-900 block text-[11px]">Recomendación de Neurx IA:</span>
+          <p class="text-blue-800 text-[11px]">
+            "El cliente visualizó el desglosado de costos hace 22 minutos. Se sugiere llamada rápida para resolver
+            objeciones de presupuesto."
+          </p>
+        </div>
+      </div>
+      <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+        <button onclick="closeInterveneModal()"
+          class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs">
+          Cancelar
+        </button>
+        <button onclick="confirmIntervention()"
+          class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-xs">
+          <i class="fa-solid fa-phone"></i> Confirmar e Intervenir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TOAST NOTIFICATION CONTAINER                             -->
+  <!-- ======================================================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT DE LA APLICACIÓN                              -->
+  <!-- ======================================================== -->
+  <script>
+    // --- 1. DATOS DE ESTADO (State Management) ---
+    const DEFAULT_QUOTES = [
+      {
+        id: 1,
+        client: 'TechCorp Solutions',
+        amount: 12500,
+        sendDate: '2026-09-24',
+        sendDateFormatted: '24 sep',
+        channel: 'Email',
+        aiScore: 8.5,
+        status: 'Seguimiento'
+      },
+      {
+        id: 2,
+        client: 'InnovaTech Global',
+        amount: 28400,
+        sendDate: '2026-09-26',
+        sendDateFormatted: '26 sep',
+        channel: 'WhatsApp',
+        aiScore: 9.2,
+        status: 'Alta Intención'
+      },
+      {
+        id: 3,
+        client: 'Distribuidora Solar MX',
+        amount: 7800,
+        sendDate: '2026-09-28',
+        sendDateFormatted: '28 sep',
+        channel: 'Email',
+        aiScore: 6.4,
+        status: 'En Riesgo'
+      },
+      {
+        id: 4,
+        client: 'Apex Logística Andina',
+        amount: 45000,
+        sendDate: '2026-09-29',
+        sendDateFormatted: '29 sep',
+        channel: 'WhatsApp',
+        aiScore: 8.9,
+        status: 'Seguimiento'
+      },
+      {
+        id: 5,
+        client: 'Grupo Vanguardia SA',
+        amount: 18200,
+        sendDate: '2026-09-30',
+        sendDateFormatted: '30 sep',
+        channel: 'Email',
+        aiScore: 7.8,
+        status: 'Negociación'
+      },
+      {
+        id: 6,
+        client: 'BioMedica Central',
+        amount: 9650,
+        sendDate: '2026-10-01',
+        sendDateFormatted: '01 oct',
+        channel: 'WhatsApp',
+        aiScore: 9.5,
+        status: 'Alta Intención'
+      }
+    ];
+
+    const DEFAULT_EMAIL_TEMPLATE = `Hola {{nombre_cliente}},
+
+Espero que te encuentres excelente. Te contacto brevemente para confirmar si tuviste oportunidad de revisar la propuesta por un total de {{monto_cotizacion}} que te enviamos recientemente.
+
+Estamos listos para resolver cualquier consulta técnica o financiera para avanzar con la implementación.
+
+Puedes acceder nuevamente al documento completo aquí:
+{{enlace_cotizacion}}
+
+Quedo atento a tus comentarios.
+
+Saludos cordiales,
+Ficergib Solís
+Neurx AI Commercial Lead`;
+
+    const DEFAULT_WHATSAPP_TEMPLATE = `Hola {{nombre_cliente}} 👋, un gusto saludarte.
+
+Soy Ficergib de *Neurx*. Noté que estuviste revisando la cotización por *{{monto_cotizacion}}*.
+
+¿Tienes unos minutos hoy para resolver cualquier duda rápida por aquí o por llamada? 🚀
+
+Enlace directo a tu propuesta: {{enlace_cotizacion}}`;
+
+    let quotesData = [...DEFAULT_QUOTES];
+    let currentChannelFilter = 'ALL';
+    let currentInterveneQuoteId = null;
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+
+    // --- 2. INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initDate();
+      renderQuotesTable();
+      loadTemplates();
+      initCharacterCounters();
+    });
+
+    // --- 3. GESTIÓN DE FECHA DINÁMICA ---
+    function initDate() {
+      const dateElement = document.getElementById('header-dynamic-date');
+      const now = new Date();
+      const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      };
+      // Format in Spanish
+      let formatted = now.toLocaleDateString('es-ES', options);
+      // Capitalize first letter
+      formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      dateElement.textContent = formatted;
+    }
+
+    // --- 4. NAVEGACIÓN Y VISTAS (SPA Layout) ---
+    function switchView(viewName) {
+      // Hide all views
+      document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-analytics').classList.add('hidden');
+      document.getElementById('view-ai-config').classList.add('hidden');
+
+      // Reset Nav button styles
+      const navButtons = document.querySelectorAll('.nav-btn');
+      navButtons.forEach(btn => {
+        btn.classList.remove('bg-white/15', 'text-white', 'shadow-sm', 'border', 'border-white/10');
+        btn.classList.add('text-blue-100/80');
+      });
+
+      // Close mobile sidebar if open
+      closeMobileSidebar();
+
+      // Show requested view & style active nav
+      if (viewName === 'dashboard') {
+        document.getElementById('view-dashboard').classList.remove('hidden');
+        document.getElementById('nav-dashboard').classList.add('bg-white/15', 'text-white', 'shadow-sm', 'border', 'border-white/10');
+        document.getElementById('nav-dashboard').classList.remove('text-blue-100/80');
+        document.getElementById('breadcrumb-current').textContent = 'Dashboard Principal';
+        document.getElementById('page-heading').textContent = 'Seguimiento de Cotizaciones';
+      } else if (viewName === 'analytics') {
+        document.getElementById('view-analytics').classList.remove('hidden');
+        document.getElementById('nav-analytics').classList.add('bg-white/15', 'text-white', 'shadow-sm', 'border', 'border-white/10');
+        document.getElementById('nav-analytics').classList.remove('text-blue-100/80');
+        document.getElementById('breadcrumb-current').textContent = 'Analítica General';
+        document.getElementById('page-heading').textContent = 'Métricas y Conversiones';
+
+        // Initialize charts if not already done
+        renderAnalyticsCharts();
+      } else if (viewName === 'ai-config') {
+        document.getElementById('view-ai-config').classList.remove('hidden');
+        document.getElementById('nav-ai-config').classList.add('bg-white/15', 'text-white', 'shadow-sm', 'border', 'border-white/10');
+        document.getElementById('nav-ai-config').classList.remove('text-blue-100/80');
+        document.getElementById('breadcrumb-current').textContent = 'Configuración de IA';
+        document.getElementById('page-heading').textContent = 'Reglas y Plantillas del Motor';
+      }
+    }
+
+    // Mobile sidebar toggle
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobile-overlay');
+      const isClosed = sidebar.classList.contains('-translate-x-full');
+      if (isClosed) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobile-overlay');
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+
+    // --- 5. SINCRONIZACIÓN DE CRM (Interactivo con simulación de carga) ---
+    function syncCRM() {
+      const btn = document.getElementById('btn-sync-crm');
+      const icon = document.getElementById('sync-icon');
+      const text = document.getElementById('sync-text');
+
+      // Disabled state and loading spinner
+      btn.disabled = true;
+      icon.classList.add('fa-spin');
+      text.textContent = 'Sincronizando...';
+
+      setTimeout(() => {
+        // Restore button state
+        btn.disabled = false;
+        icon.classList.remove('fa-spin');
+        text.textContent = 'Sincronizar CRM';
+
+        // Add toast notification
+        showToast('Sincronización Exitosa', 'Se actualizaron 18 cotizaciones activas desde el CRM de ventas.', 'success');
+      }, 1300);
+    }
+
+    // --- 6. TABLA DE COTIZACIONES ACTIVAS ---
+    function renderQuotesTable() {
+      const tbody = document.getElementById('quotes-table-body');
+      const searchVal = document.getElementById('table-search').value.toLowerCase().trim();
+      const sortVal = document.getElementById('table-sort').value;
+
+      // Filter by Channel and Search query
+      let filtered = quotesData.filter(item => {
+        const matchesChannel = (currentChannelFilter === 'ALL' || item.channel === currentChannelFilter);
+        const matchesSearch = item.client.toLowerCase().includes(searchVal);
+        return matchesChannel && matchesSearch;
+      });
+
+      // Sort
+      if (sortVal === 'score-desc') {
+        filtered.sort((a, b) => b.aiScore - a.aiScore);
+      } else if (sortVal === 'amount-desc') {
+        filtered.sort((a, b) => b.amount - a.amount);
+      } else if (sortVal === 'amount-asc') {
+        filtered.sort((a, b) => a.amount - b.amount);
+      } else if (sortVal === 'date-desc') {
+        filtered.sort((a, b) => new Date(b.sendDate) - new Date(a.sendDate));
+      }
+
+      // Update badge count
+      document.getElementById('table-count-badge').textContent = `${filtered.length} cotizaciones`;
+      document.getElementById('table-summary-text').textContent = `Mostrando ${filtered.length} de ${quotesData.length} cotizaciones registradas`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-400">
+              <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+              No se encontraron cotizaciones con los filtros actuales.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        // Scoring visual color
+        let scoreColorClass = 'text-blue-700 bg-blue-50 border-blue-200';
+        let scoreBarColor = 'bg-blue-600';
+        if (item.aiScore >= 9.0) {
+          scoreColorClass = 'text-amber-800 bg-amber-50 border-amber-300 font-bold';
+          scoreBarColor = 'bg-amber-500';
+        } else if (item.aiScore < 7.0) {
+          scoreColorClass = 'text-slate-600 bg-slate-100 border-slate-200';
+          scoreBarColor = 'bg-slate-400';
+        }
+
+        // Status badge
+        let statusBadge = `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> ${item.status}
+          </span>
+        `;
+        if (item.status === 'Alta Intención') {
+          statusBadge = `
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs">
+              <i class="fa-solid fa-fire text-amber-500 text-[10px]"></i> Alta Intención
+            </span>
+          `;
+        } else if (item.status === 'En Riesgo') {
+          statusBadge = `
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+              <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[10px]"></i> En Riesgo
+            </span>
+          `;
+        } else if (item.status === 'Intervenido') {
+          statusBadge = `
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <i class="fa-solid fa-user-check text-indigo-500 text-[10px]"></i> Intervenido
+            </span>
+          `;
+        }
+
+        // Channel Icon & badge
+        const channelBadge = item.channel === 'WhatsApp'
+          ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200"><i class="fa-brands fa-whatsapp text-emerald-600"></i> WhatsApp</span>`
+          : `<span class="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200"><i class="fa-regular fa-envelope text-blue-600"></i> Email</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
+                  ${item.client.substring(0, 2)}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900">${item.client}</div>
+                  <div class="text-[10px] text-slate-400 font-normal">ID: #COT-${item.id.toString().padStart(4, '0')}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-6 font-display font-bold text-slate-900 whitespace-nowrap">
+              $${item.amount.toLocaleString('en-US')}
+            </td>
+            <td class="py-4 px-6 text-slate-500 whitespace-nowrap">
+              ${item.sendDateFormatted}
+            </td>
+            <td class="py-4 px-6 whitespace-nowrap">
+              ${channelBadge}
+            </td>
+            <td class="py-4 px-6 whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2 py-0.5 rounded-md border ${scoreColorClass}">
+                  ${item.aiScore.toFixed(1)}
+                </span>
+                <div class="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden hidden sm:block">
+                  <div class="${scoreBarColor} h-1.5 rounded-full" style="width: ${(item.aiScore / 10) * 100}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-6 whitespace-nowrap">
+              ${statusBadge}
+            </td>
+            <td class="py-4 px-6 text-right whitespace-nowrap">
+              <button onclick="openInterveneModal(${item.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs">
+                <i class="fa-solid fa-headset text-blue-600"></i>
+                <span>Intervenir</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleFilterAndSort() {
+      renderQuotesTable();
+    }
+
+    function setChannelFilter(channel) {
+      currentChannelFilter = channel;
+
+      const btnAll = document.getElementById('filter-btn-all');
+      const btnEmail = document.getElementById('filter-btn-email');
+      const btnWhatsapp = document.getElementById('filter-btn-whatsapp');
+
+      [btnAll, btnEmail, btnWhatsapp].forEach(b => {
+        b.className = 'channel-filter-btn px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all';
+      });
+
+      if (channel === 'ALL') {
+        btnAll.className = 'channel-filter-btn px-2.5 py-1.5 rounded-lg bg-white shadow-xs text-blue-700 font-semibold transition-all';
+      } else if (channel === 'Email') {
+        btnEmail.className = 'channel-filter-btn px-2.5 py-1.5 rounded-lg bg-white shadow-xs text-blue-700 font-semibold transition-all';
+      } else if (channel === 'WhatsApp') {
+        btnWhatsapp.className = 'channel-filter-btn px-2.5 py-1.5 rounded-lg bg-white shadow-xs text-emerald-700 font-semibold transition-all';
+      }
+
+      renderQuotesTable();
+    }
+
+    // --- 7. MODALES Y ACCIONES DE COTIZACIONES ---
+    function openNewQuoteModal() {
+      document.getElementById('modal-new-quote').classList.remove('hidden');
+      document.getElementById('quote-client').focus();
+    }
+
+    function closeNewQuoteModal() {
+      document.getElementById('modal-new-quote').classList.add('hidden');
+      document.getElementById('form-new-quote').reset();
+    }
+
+    function handleCreateQuote(e) {
+      e.preventDefault();
+      const client = document.getElementById('quote-client').value.trim();
+      const amount = parseFloat(document.getElementById('quote-amount').value);
+      const channel = document.getElementById('quote-channel').value;
+      const score = parseFloat(document.getElementById('quote-score').value);
+      const status = document.getElementById('quote-status').value;
+
+      const newQuote = {
+        id: quotesData.length + 1,
+        client: client,
+        amount: amount,
+        sendDate: new Date().toISOString().split('T')[0],
+        sendDateFormatted: 'Hoy',
+        channel: channel,
+        aiScore: score,
+        status: status
+      };
+
+      quotesData.unshift(newQuote);
+      renderQuotesTable();
+      closeNewQuoteModal();
+
+      // Update KPI
+      const kpiPending = document.getElementById('kpi-pending-count');
+      kpiPending.textContent = parseInt(kpiPending.textContent) + 1;
+
+      showToast('Cotización Registrada', `${client} fue agregado al flujo de seguimiento automatizado.`, 'success');
+    }
+
+    function openInterveneModal(id) {
+      const quote = quotesData.find(q => q.id === id);
+      if (!quote) return;
+      currentInterveneQuoteId = id;
+      document.getElementById('intervene-client-name').textContent = quote.client;
+      document.getElementById('modal-intervene').classList.remove('hidden');
+    }
+
+    function closeInterveneModal() {
+      document.getElementById('modal-intervene').classList.add('hidden');
+      currentInterveneQuoteId = null;
+    }
+
+    function confirmIntervention() {
+      if (!currentInterveneQuoteId) return;
+      const quote = quotesData.find(q => q.id === currentInterveneQuoteId);
+      if (quote) {
+        quote.status = 'Intervenido';
+        renderQuotesTable();
+        showToast('Intervención Confirmada', `Ficergib ha tomado el control manual para ${quote.client}.`, 'info');
+      }
+      closeInterveneModal();
+    }
+
+    // --- 8. VISTA 2: GRÁFICOS INTERACTIVOS (Chart.js) ---
+    function renderAnalyticsCharts() {
+      // 1. Gráfico de barras comparativo (Enviadas vs Recuperadas)
+      const barCtx = document.getElementById('barChartComparative');
+      if (barCtx && !barChartInstance) {
+        barChartInstance = new Chart(barCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre'],
+            datasets: [
+              {
+                label: 'Cotizaciones Enviadas',
+                data: [65, 80, 95, 110, 125, 90],
+                backgroundColor: '#2563EB',
+                borderRadius: 8,
+                barPercentage: 0.6,
+                categoryPercentage: 0.6
+              },
+              {
+                label: 'Cotizaciones Recuperadas por IA',
+                data: [20, 29, 36, 44, 52, 38],
+                backgroundColor: '#10B981',
+                borderRadius: 8,
+                barPercentage: 0.6,
+                categoryPercentage: 0.6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: '#1E293B',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 12 },
+                padding: 10,
+                cornerRadius: 8
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { font: { family: 'Inter', size: 11 }, color: '#64748B' }
+              },
+              y: {
+                grid: { color: '#F1F5F9' },
+                ticks: { font: { family: 'Inter', size: 11 }, color: '#64748B' }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Gráfico de dona (WhatsApp vs Email)
+      const doughnutCtx = document.getElementById('doughnutChartChannels');
+      if (doughnutCtx && !doughnutChartInstance) {
+        doughnutChartInstance = new Chart(doughnutCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['WhatsApp (58%)', 'Email (42%)'],
+            datasets: [{
+              data: [58, 42],
+              backgroundColor: ['#10B981', '#2563EB'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '72%',
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: '#1E293B',
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: function (context) {
+                    return ` ${context.label}: ${context.raw}%`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function downloadReportSimulated() {
+      showToast('Descargando Reporte', 'Generando resumen financiero consolidado en formato PDF...', 'info');
+      setTimeout(() => {
+        showToast('Reporte Listo', 'El informe "Neurx_Reporte_Octubre_2026.pdf" se descargó correctamente.', 'success');
+      }, 1500);
+    }
+
+    // --- 9. VISTA 3: CONFIGURACIÓN DE IA & LOCALSTORAGE ---
+    function loadTemplates() {
+      const savedEmail = localStorage.getItem('neurx_email_template');
+      const savedWhatsapp = localStorage.getItem('neurx_whatsapp_template');
+
+      const emailTextarea = document.getElementById('email-template');
+      const whatsappTextarea = document.getElementById('whatsapp-template');
+
+      emailTextarea.value = savedEmail !== null ? savedEmail : DEFAULT_EMAIL_TEMPLATE;
+      whatsappTextarea.value = savedWhatsapp !== null ? savedWhatsapp : DEFAULT_WHATSAPP_TEMPLATE;
+
+      updateCharCounts();
+    }
+
+    function saveTemplates(e) {
+      e.preventDefault();
+      const emailContent = document.getElementById('email-template').value;
+      const whatsappContent = document.getElementById('whatsapp-template').value;
+
+      localStorage.setItem('neurx_email_template', emailContent);
+      localStorage.setItem('neurx_whatsapp_template', whatsappContent);
+
+      showToast('Cambios Guardados', 'Las plantillas de Email y WhatsApp se guardaron con éxito en localStorage.', 'success');
+    }
+
+    function restoreDefaultTemplates() {
+      if (confirm('¿Deseas restablecer las plantillas al formato predeterminado?')) {
+        document.getElementById('email-template').value = DEFAULT_EMAIL_TEMPLATE;
+        document.getElementById('whatsapp-template').value = DEFAULT_WHATSAPP_TEMPLATE;
+        localStorage.removeItem('neurx_email_template');
+        localStorage.removeItem('neurx_whatsapp_template');
+        updateCharCounts();
+        showToast('Plantillas Restablecidas', 'Se han restaurado los copys originales de Neurx.', 'info');
+      }
+    }
+
+    function insertVariable(targetId, variableTag) {
+      const textarea = document.getElementById(targetId);
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      textarea.value = text.substring(0, start) + variableTag + text.substring(end);
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + variableTag.length;
+      updateCharCounts();
+      showToast('Variable Copiada', `Variable ${variableTag} insertada en la plantilla activa.`, 'info');
+    }
+
+    function initCharacterCounters() {
+      const emailArea = document.getElementById('email-template');
+      const whatsappArea = document.getElementById('whatsapp-template');
+
+      emailArea.addEventListener('input', updateCharCounts);
+      whatsappArea.addEventListener('input', updateCharCounts);
+    }
+
+    function updateCharCounts() {
+      const emailVal = document.getElementById('email-template').value;
+      const whatsappVal = document.getElementById('whatsapp-template').value;
+      document.getElementById('email-char-count').textContent = `${emailVal.length} caracteres`;
+      document.getElementById('whatsapp-char-count').textContent = `${whatsappVal.length} caracteres`;
+    }
+
+    // Triggers Editor
+    function editTrigger(id, currentEvent, currentAction) {
+      document.getElementById('edit-trigger-id').value = id;
+      document.getElementById('edit-trigger-event').value = currentEvent;
+      document.getElementById('edit-trigger-action').value = currentAction;
+      document.getElementById('modal-edit-trigger').classList.remove('hidden');
+    }
+
+    function closeEditTriggerModal() {
+      document.getElementById('modal-edit-trigger').classList.add('hidden');
+    }
+
+    function handleSaveTrigger(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-trigger-id').value;
+      const newEvent = document.getElementById('edit-trigger-event').value;
+      const newAction = document.getElementById('edit-trigger-action').value;
+
+      const triggerRow = document.querySelector(`[data-id="${id}"]`);
+      if (triggerRow) {
+        triggerRow.querySelector('.trigger-event').textContent = newEvent;
+        triggerRow.querySelector('.trigger-action').textContent = newAction;
+      }
+
+      closeEditTriggerModal();
+      showToast('Disparador Actualizado', `La secuencia para "${newEvent}" se reconfiguró correctamente.`, 'success');
+    }
+
+    function openNewTriggerModal() {
+      editTrigger('trigger-custom', 'Nueva condición de interacción', 'WhatsApp: 24h después');
+    }
+
+    // --- 10. NOTIFICACIONES FLOTANTES (Toast Notifications) ---
+    function showToast(title, message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      let icon = 'fa-solid fa-circle-check text-emerald-500';
+      let border = 'border-slate-200';
+      if (type === 'info') {
+        icon = 'fa-solid fa-circle-info text-blue-600';
+      } else if (type === 'warning') {
+        icon = 'fa-solid fa-triangle-exclamation text-amber-500';
+      }
+
+      toast.className = `pointer-events-auto toast-enter bg-white border ${border} rounded-2xl p-4 shadow-xl flex items-start gap-3 max-w-sm w-full`;
+      toast.innerHTML = `
+        <i class="${icon} text-lg mt-0.5 shrink-0"></i>
+        <div class="flex-1">
+          <h4 class="font-bold text-xs text-slate-900">${title}</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+
+      // Auto dismiss after 4 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+  </script>
+
+</body>
+
+</html>
